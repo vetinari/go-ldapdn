@@ -6,7 +6,6 @@ import (
         "fmt"
         "errors"
         "encoding/hex"
-        "bytes"
         "strings"
         "sort"
     )
@@ -65,7 +64,7 @@ func (self *DN) explode(dn_str string) error {
             val = val[1:]
             // val_b, err := hex.DecodeString(val)
             val_b, _ := hex.DecodeString(val)
-            val = bytes2string(val_b)
+            val = string(val_b)
         } else {
             if val[0] == '"' && val[len(val)] == '"' {
                 // remove quotes
@@ -119,11 +118,6 @@ func (self *DN) String() (string) {
     return self.canonicalize()
 }
 
-func bytes2string(b []byte) (string) {
-    buf := bytes.NewBuffer(b)
-    return buf.String()
-}
-
 func unescape(s string) (string) {
     s = s[1:]
     if len(s) == 1 {
@@ -131,7 +125,7 @@ func unescape(s string) (string) {
     }
     // s_b, err := hex.DecodeString(s)
     s_b, _ := hex.DecodeString(s)
-    return bytes2string(s_b)
+    return string(s_b)
 }
 
 // Clone()
@@ -151,7 +145,11 @@ func (self *DN) clone() (*DN) {
 //   the parent of the DN from a cloned instance
 func (self *DN) Parent() (*DN) {
     c := self.clone()
-    c.dn = c.dn[1:]
+    if len(c.dn) <= 1 {
+        c.dn = []map[string]string{}
+    } else {
+        c.dn = c.dn[1:]
+    }
     return c
 }
 
@@ -161,6 +159,9 @@ func (self *DN) Parent() (*DN) {
 // CN=Someone). With a false value only the attribute ("CN=Someone,DC=example,DC=org
 // -> "Someone").
 func (self *DN) RDN(key bool) (string) {
+    if len(self.dn) == 0 {
+        return ""
+    }
     if key {
         c := self.clone()
         c.dn = c.dn[0:0]
