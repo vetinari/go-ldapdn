@@ -237,7 +237,7 @@ func rdn_equal(l map[string]string, r map[string]string) (bool) {
 }
 
 func compare(l []map[string]string, r []map[string]string) (bool) {
-    for i := range l {
+    for i := range r {
         if !rdn_equal(l[i], r[i]) {
             return false
         }
@@ -246,10 +246,9 @@ func compare(l []map[string]string, r []map[string]string) (bool) {
 }
 
 func reverse (f []map[string]string) (r []map[string]string) {
-    var o []map[string]string
     for i := range f {
         i := i
-        defer func() { o = append(o, f[i]) }()
+        defer func() { r = append(r, f[i]) }()
     }
     return
 }
