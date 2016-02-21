@@ -10,6 +10,7 @@ import (
 
 var ErrDNNotSubordinate = errors.New("Not a subordinate")
 
+// When CaseFold is true, the RDN values are compared case insensitive
 type DN struct {
 	RDNs		[]*RelativeDN
 	CaseFold	bool
