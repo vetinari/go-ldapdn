@@ -7,6 +7,8 @@ This is a go module for handling LDAP DNs
 Links :
 ----
 
+docs: https://godoc.org/github.com/vetinari/go-ldapdn
+
 perl version: https://github.com/vetinari/perl-net-ldap-dn
 
 Licence :
