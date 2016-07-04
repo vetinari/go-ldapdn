@@ -79,6 +79,29 @@ func escapeValue(value string) (escaped string) {
 	return
 }
 
+func (dn *DN) Pretty(base *DN, sep string, conv func(string) string) string {
+	if sep == "" {
+		sep = "/"
+	}
+	if conv == nil {
+		conv = strings.Title
+	}
+
+	var parts []string
+	_ = dn.Strip(base)
+	rdn := dn.RDN()
+	for rdn != "" {
+		parts = append(parts, rdn)
+		dn = dn.Parent()
+		rdn = dn.RDN()
+	}
+	var rev []string
+	for i := len(parts) - 1; i >= 0; i-- {
+		rev = append(rev, conv(parts[i]))
+	}
+	return strings.Join(rev, sep)
+}
+
 // check if all RDNs of both DNs are equal
 func (dn *DN) Equal(other *DN) bool {
 	if len(dn.RDNs) != len(other.RDNs) {
