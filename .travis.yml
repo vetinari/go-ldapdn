@@ -20,3 +20,4 @@ script:
     - make fmt
     - if [[ "$VET_VERSIONS"  == *"$TRAVIS_GO_VERSION"* ]]; then make vet; fi
     - if [[ "$LINT_VERSIONS" == *"$TRAVIS_GO_VERSION"* ]]; then make lint; fi
+
