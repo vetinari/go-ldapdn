@@ -12,6 +12,10 @@ import (
 // the DN to be stripped
 var ErrDNNotSubordinate = errors.New("Not a subordinate")
 
+// ErrInvalidNumberOfArgs is returned by NewRDN() when the number of arguments is
+// not even
+var ErrInvalidNumberOfArgs = errors.New("Not an even number of arguments")
+
 // DN is a DN. When CaseFold is true, the RDN values are compared case insensitive
 type DN struct {
 	RDNs     []*RelativeDN
@@ -116,6 +120,26 @@ func (dn *DN) Equal(other *DN) bool {
 		}
 	}
 	return true
+}
+
+// NewRDN returns a new RelativeDN, e.g.
+//   rdn, err := NewRDN("cn", "J. Smith")
+// will create the RDN "cn=J. Smith", this RDN
+// may be passed to Rename()
+func NewRDN(rdn ...string) (*RelativeDN, error) {
+	if (len(rdn) % 2) != 0 {
+		return nil, ErrInvalidNumberOfArgs
+	}
+	lrdn := &ldap.RelativeDN{}
+	for {
+		if len(rdn) == 0 {
+			break
+		}
+		var attr, val string
+		attr, val, rdn = rdn[0], rdn[1], rdn[2:]
+		lrdn.Attributes = append(lrdn.Attributes, &ldap.AttributeTypeAndValue{Type: attr, Value: val})
+	}
+	return &RelativeDN{lrdn}, nil
 }
 
 // Equal checks if all types and values of both RDNs are equal
@@ -229,7 +253,7 @@ func (dn *DN) Parent() *DN {
 func (dn *DN) Clone() *DN {
 	c := &DN{}
 	for _, r := range dn.RDNs {
-		rc := &RelativeDN{&ldap.RelativeDN{}}
+		rc, _ := NewRDN()
 		for _, tv := range r.Attributes {
 			rc.Attributes = append(rc.Attributes, &ldap.AttributeTypeAndValue{Type: tv.Type, Value: tv.Value})
 		}
@@ -241,12 +265,12 @@ func (dn *DN) Clone() *DN {
 // DNS is used for sorting DNs:
 // (sometimes golint is annoyingly wrong, should be DNs...)
 //   all := []*ldap.DN{dn1, dn2, dn3, dn4}
-//   sort.Sort(DNs(all))
+//   sort.Sort(DNS(all))
 //   for _, dn := range all {
 //      println(dn.String())
 //   }
 //
-// The result order from deepest part in tree upwards, so you could
+// The result is ordered from deepest part in tree upwards, so you could
 // easily search for all dns in a base, sort them and then remove
 // every DN in that order to remove the tree (including the search base)
 type DNS []*DN
