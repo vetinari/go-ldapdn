@@ -28,6 +28,16 @@ func TestRDNString(t *testing.T) {
 	}
 }
 
+func TestNewRDN(t *testing.T) {
+	rdn, err := NewRDN("ou", "Sales", "cn", "J. Smith")
+	if err != nil {
+		t.Errorf("failed to build RDN: %s", err)
+	}
+	if rdn.String() != "ou=Sales+cn=J. Smith" {
+		t.Errorf("Failed to stringify RDN: %v\n", rdn)
+	}
+}
+
 func TestDNInvalidString(t *testing.T) {
 	dn, err := New("uid=foo,bar,dc=example,dc=org")
 	if err != nil {
