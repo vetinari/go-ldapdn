@@ -68,7 +68,7 @@ func TestCanonicalDN(t *testing.T) {
 
 func TestCanonicalDNFolded(t *testing.T) {
 	dn := "ou=Sales+CN=J. Smith,  DC=example, DC=net"
-	cdn, _ := CanonicalDNFolded(dn)
+	cdn, _ := CanonicalDN(dn, true)
 	if cdn != "cn=j. smith+ou=sales,dc=example,dc=net" {
 		t.Errorf("Canonical DN Folded Failed: %s\n", cdn)
 	}

@@ -17,10 +17,13 @@ var ErrDNNotSubordinate = errors.New("Not a subordinate")
 // not even
 var ErrInvalidNumberOfArgs = errors.New("Not an even number of arguments")
 
-// DN is a DN. When CaseFold is true, the RDN values are compared case insensitive
+// DN is a DN. When CaseFold is true, the RDN values are compared case
+// insensitive. With a true StringFold, dn.String() returns the string
+// lowercased.
 type DN struct {
-	RDNs     []*RelativeDN
-	CaseFold bool
+	RDNs       []*RelativeDN
+	CaseFold   bool
+	StringFold bool
 }
 
 // RelativeDN is part of a DN
@@ -33,27 +36,20 @@ type RelativeDN struct {
 // all BER encoding converted,
 // all necessary characters escaped.
 // this is a convenience function around New() and String()
-func CanonicalDN(dn string) (string, error) {
-	ldn, err := New(dn)
+// When the optional fold argument is true, the returned
+// string is lowercased.
+func CanonicalDN(dn string, fold ...bool) (string, error) {
+	ldn, err := New(dn, fold...)
 	if err != nil {
 		return "", err
 	}
 	return ldn.String(), nil
 }
 
-// CanonicalDNFolded returns the canonical DN form of a DN, all
-// attributes and values folded to lower case, else it behaves
-// like CanonicalDN
-func CanonicalDNFolded(dn string) (string, error) {
-	ldn, err := New(dn)
-	if err != nil {
-		return "", err
-	}
-	return strings.ToLower(ldn.String()), nil
-}
-
-// New creates a new DN from a string DN.
-func New(dn string) (*DN, error) {
+// New creates a new DN from a string DN. The optional fold
+// argument sets CaseFold and StringFold to the given value -
+// only the first boolean is used.
+func New(dn string, fold ...bool) (*DN, error) {
 	ldn, err := ldap.ParseDN(dn)
 	if err != nil {
 		return nil, err
@@ -65,6 +61,9 @@ func New(dn string) (*DN, error) {
 		}
 		rdns = append(rdns, &RelativeDN{r})
 	}
+	if len(fold) > 0 {
+		return &DN{RDNs: rdns, CaseFold: fold[0], StringFold: fold[0]}, nil
+	}
 	return &DN{RDNs: rdns, CaseFold: false}, nil
 }
 
@@ -73,6 +72,9 @@ func (dn *DN) String() string {
 	var rdns []string
 	for _, r := range dn.RDNs {
 		rdns = append(rdns, r.String())
+	}
+	if dn.StringFold {
+		return strings.ToLower(strings.Join(rdns, ","))
 	}
 	return strings.Join(rdns, ",")
 }
