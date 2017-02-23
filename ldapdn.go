@@ -3,6 +3,7 @@ package ldapdn
 import (
 	enchex "encoding/hex"
 	"errors"
+	"sort"
 	"strings"
 
 	"gopkg.in/ldap.v2"
@@ -38,6 +39,17 @@ func CanonicalDN(dn string) (string, error) {
 		return "", err
 	}
 	return ldn.String(), nil
+}
+
+// CanonicalDNFolded returns the canonical DN form of a DN, all
+// attributes and values folded to lower case, else it behaves
+// like CanonicalDN
+func CanonicalDNFolded(dn string) (string, error) {
+	ldn, err := New(dn)
+	if err != nil {
+		return "", err
+	}
+	return strings.ToLower(ldn.String()), nil
 }
 
 // New creates a new DN from a string DN.
@@ -287,9 +299,25 @@ func (d DNS) Less(i, j int) bool {
 	return ([]*DN)(d)[i].IsSubordinate(([]*DN)(d)[j])
 }
 
+type ava []*ldap.AttributeTypeAndValue
+
+func (a ava) Len() int {
+	return len(a)
+}
+
+func (a ava) Swap(i, j int) {
+	(a)[i], (a)[j] = (a)[j], (a)[i]
+}
+
+func (a ava) Less(i, j int) bool {
+	return a[i].Type < a[j].Type
+}
+
 // String returns the stringified version of an RDN
 func (r *RelativeDN) String() string {
 	var parts []string
+	attrs := r.Attributes
+	sort.Sort(ava(attrs))
 	for _, a := range r.Attributes {
 		parts = append(parts, strings.ToLower(a.Type)+"="+escapeValue(a.Value))
 	}
