@@ -10,7 +10,7 @@ func TestDNString(t *testing.T) {
 	fmt.Printf("DNString: starting...\n")
 	dn, _ := New("OU=Sales+CN=J. Smith,DC=example,DC=net")
 	strdn := dn.String()
-	if strdn != "ou=Sales+cn=J. Smith,dc=example,dc=net" {
+	if strdn != "cn=J. Smith+ou=Sales,dc=example,dc=net" {
 		t.Errorf("Failed to stringify: %v\n", strdn)
 	}
 	fmt.Printf("DNString: -> %v\n", strdn)
@@ -21,10 +21,14 @@ func TestDNString(t *testing.T) {
 }
 
 func TestRDNString(t *testing.T) {
-	dn, _ := New("ou=Sales+cn=J. Smith")
+	dn, _ := New("cn=J. Smith+ou=Sales")
+	dn2, _ := New("ou=Sales+cn=J. Smith")
 	strdn := dn.FirstRDN().String()
-	if strdn != "ou=Sales+cn=J. Smith" {
+	if strdn != "cn=J. Smith+ou=Sales" {
 		t.Errorf("Failed to stringify: %v\n", strdn)
+	}
+	if dn2.FirstRDN().String() != strdn {
+		t.Errorf("both RDNs not equal: %v\n", strdn)
 	}
 }
 
@@ -33,7 +37,7 @@ func TestNewRDN(t *testing.T) {
 	if err != nil {
 		t.Errorf("failed to build RDN: %s", err)
 	}
-	if rdn.String() != "ou=Sales+cn=J. Smith" {
+	if rdn.String() != "cn=J. Smith+ou=Sales" {
 		t.Errorf("Failed to stringify RDN: %v\n", rdn)
 	}
 }
@@ -57,8 +61,16 @@ func TestEscapeValue(t *testing.T) {
 func TestCanonicalDN(t *testing.T) {
 	dn := "ou=Sales+CN=J. Smith,  DC=example, DC=net"
 	cdn, _ := CanonicalDN(dn)
-	if cdn != "ou=Sales+cn=J. Smith,dc=example,dc=net" {
+	if cdn != "cn=J. Smith+ou=Sales,dc=example,dc=net" {
 		t.Errorf("Canonical DN Failed: %s\n", cdn)
+	}
+}
+
+func TestCanonicalDNFolded(t *testing.T) {
+	dn := "ou=Sales+CN=J. Smith,  DC=example, DC=net"
+	cdn, _ := CanonicalDNFolded(dn)
+	if cdn != "cn=j. smith+ou=sales,dc=example,dc=net" {
+		t.Errorf("Canonical DN Folded Failed: %s\n", cdn)
 	}
 }
 
@@ -66,7 +78,7 @@ func TestDNParent(t *testing.T) {
 	fmt.Printf("DN Parent: starting...\n")
 	dn, _ := New("OU=Sales+CN=J. Smith,DC=example,DC=net")
 	parent := dn.Parent()
-	if dn.String() != "ou=Sales+cn=J. Smith,dc=example,dc=net" {
+	if dn.String() != "cn=J. Smith+ou=Sales,dc=example,dc=net" {
 		t.Errorf("original dn modified -> %s\n", dn)
 	}
 	if parent.String() != "dc=example,dc=net" {
@@ -86,7 +98,7 @@ func TestDNMove(t *testing.T) {
 	base, _ := New("OU=People,DC=example,DC=net")
 	rdn, _ := New("cn=J. Smith")
 	dn.Move(base)
-	if dn.String() != "ou=Sales+cn=J. Smith,ou=People,dc=example,dc=net" {
+	if dn.String() != "cn=J. Smith+ou=Sales,ou=People,dc=example,dc=net" {
 		t.Errorf("Failed to move: %s\n", dn)
 	}
 	dn.Rename(rdn.RDNs[0])
