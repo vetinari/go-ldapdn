@@ -277,13 +277,13 @@ func (dn *DN) Clone() *DN {
 }
 
 // Reverse reverses a DN, e.g. uid=user,ou=people,dc=example,dc=org becomes dc=org,dc=example,ou=people,uid=user
-func (d *DN) Reverse() *DN {
-	l := len(d.RDNs) - 1
-	dn := &DN{CaseFold: d.CaseFold, StringFold: d.StringFold, RDNs: make([]*RelativeDN, l+1)}
+func (dn *DN) Reverse() *DN {
+	l := len(dn.RDNs) - 1
+	d := &DN{CaseFold: dn.CaseFold, StringFold: dn.StringFold, RDNs: make([]*RelativeDN, l+1)}
 	for i := 0; i <= l; i++ {
-		dn.RDNs[i] = d.RDNs[l-i]
+		d.RDNs[i] = dn.RDNs[l-i]
 	}
-	return dn
+	return d
 }
 
 // DNS is used for sorting DNs:
