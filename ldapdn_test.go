@@ -2,6 +2,7 @@ package ldapdn
 
 import (
 	"fmt"
+	"reflect"
 	"sort"
 	"testing"
 )
@@ -125,29 +126,45 @@ func TestDNEqual(t *testing.T) {
 
 func TestDNSort(t *testing.T) {
 	var dns []*DN
-	dnStrings := []string{
-		"ou=people,dc=example,dc=org",
-		"uid=another,ou=people,dc=example,dc=org",
-		"uid=another+cn=one,ou=people,dc=example,dc=org",
-		"dc=example,dc=org",
-		"uid=someone,ou=people,dc=example,dc=org",
-		"ou=robots,dc=example,dc=org",
-		"uid=someone,ou=robots,dc=example,dc=org",
+	dnSorted := []string{
+		"cn=ReadOnly,ou=Roles,ou=acc1,ou=aws,dc=example,dc=org",
+		"cn=PowerUser,ou=Roles,ou=acc1,ou=aws,dc=example,dc=org",
+		"cn=Administrator,ou=Roles,ou=acc1,ou=aws,dc=example,dc=org",
+		"ou=Roles,ou=acc1,ou=aws,dc=example,dc=org",
+		"cn=eu-central-1,ou=odd,ou=IPs,ou=acc1,ou=aws,dc=example,dc=org",
+		"ou=odd,ou=IPs,ou=acc1,ou=aws,dc=example,dc=org",
+		"cn=eu-central-1b,ou=nat,ou=IPs,ou=acc1,ou=aws,dc=example,dc=org",
+		"cn=eu-central-1a,ou=nat,ou=IPs,ou=acc1,ou=aws,dc=example,dc=org",
+		"ou=nat,ou=IPs,ou=acc1,ou=aws,dc=example,dc=org",
+		"ou=IPs,ou=acc1,ou=aws,dc=example,dc=org",
+		"ou=acc1,ou=aws,dc=example,dc=org",
 	}
 
-	for _, s := range dnStrings {
+	dnUnsorted := []string{
+		"cn=eu-central-1b,ou=nat,ou=IPs,ou=acc1,ou=aws,dc=example,dc=org",
+		"cn=PowerUser,ou=Roles,ou=acc1,ou=aws,dc=example,dc=org",
+		"ou=Roles,ou=acc1,ou=aws,dc=example,dc=org",
+		"cn=eu-central-1,ou=odd,ou=IPs,ou=acc1,ou=aws,dc=example,dc=org",
+		"cn=ReadOnly,ou=Roles,ou=acc1,ou=aws,dc=example,dc=org",
+		"ou=acc1,ou=aws,dc=example,dc=org",
+		"cn=Administrator,ou=Roles,ou=acc1,ou=aws,dc=example,dc=org",
+		"ou=odd,ou=IPs,ou=acc1,ou=aws,dc=example,dc=org",
+		"cn=eu-central-1a,ou=nat,ou=IPs,ou=acc1,ou=aws,dc=example,dc=org",
+		"ou=IPs,ou=acc1,ou=aws,dc=example,dc=org",
+		"ou=nat,ou=IPs,ou=acc1,ou=aws,dc=example,dc=org",
+	}
+
+	for _, s := range dnUnsorted {
 		dn, _ := New(s)
 		dns = append(dns, dn)
 	}
 	sort.Sort(DNS(dns))
+	var out []string
 	for _, dn := range dns {
-		fmt.Printf("DN: %s\n", dn.String())
+		out = append(out, dn.String())
 	}
-	if dns[len(dns)-1].String() != "dc=example,dc=org" {
-		t.Errorf("DN dc=example,dc=org is not last")
-	}
-	if dns[0].String() != "uid=someone,ou=robots,dc=example,dc=org" {
-		t.Errorf("found %s as first...", dns[0].String())
+	if !reflect.DeepEqual(out, dnSorted) {
+		t.Errorf("failed to sort: %v", out)
 	}
 }
 
