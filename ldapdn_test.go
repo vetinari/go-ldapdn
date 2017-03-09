@@ -146,8 +146,8 @@ func TestDNSort(t *testing.T) {
 	if dns[len(dns)-1].String() != "dc=example,dc=org" {
 		t.Errorf("DN dc=example,dc=org is not last")
 	}
-	if dns[0].String() != "uid=another,ou=people,dc=example,dc=org" {
-		t.Errorf("DN uid=another,ou=people,dc=example,dc=org is not first")
+	if dns[0].String() != "uid=someone,ou=robots,dc=example,dc=org" {
+		t.Errorf("found %s as first...", dns[0].String())
 	}
 }
 
@@ -189,5 +189,13 @@ func TestIsSubordinate(t *testing.T) {
 	notBase, _ := New("dc=example,dc=com")
 	if dn.IsSubordinate(notBase) {
 		t.Errorf("did not fail IsSubordinate() on non parent")
+	}
+}
+
+func TestReverse(t *testing.T) {
+	dn, _ := New("cn=group,ou=some,ou=apps,dc=example,dc=org")
+	rev := dn.Reverse()
+	if rev.String() != "dc=org,dc=example,ou=apps,ou=some,cn=group" {
+		t.Errorf("failed to reverse DN: %s", rev)
 	}
 }

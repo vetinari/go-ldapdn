@@ -276,6 +276,16 @@ func (dn *DN) Clone() *DN {
 	return c
 }
 
+// Reverse reverses a DN, e.g. uid=user,ou=people,dc=example,dc=org becomes dc=org,dc=example,ou=people,uid=user
+func (d *DN) Reverse() *DN {
+	l := len(d.RDNs) - 1
+	dn := &DN{CaseFold: d.CaseFold, StringFold: d.StringFold, RDNs: make([]*RelativeDN, l+1)}
+	for i := 0; i <= l; i++ {
+		dn.RDNs[i] = d.RDNs[l-i]
+	}
+	return dn
+}
+
 // DNS is used for sorting DNs:
 // (sometimes golint is annoyingly wrong, should be DNs...)
 //   all := []*ldap.DN{dn1, dn2, dn3, dn4}
@@ -290,15 +300,21 @@ func (dn *DN) Clone() *DN {
 type DNS []*DN
 
 func (d DNS) Len() int {
-	return len(([]*DN)(d))
+	return len(d)
 }
 
 func (d DNS) Swap(i, j int) {
-	([]*DN)(d)[i], ([]*DN)(d)[j] = ([]*DN)(d)[j], ([]*DN)(d)[i]
+	d[i], d[j] = d[j], d[i]
 }
 
 func (d DNS) Less(i, j int) bool {
-	return ([]*DN)(d)[i].IsSubordinate(([]*DN)(d)[j])
+	if d[i].IsSubordinate(d[j]) {
+		return true
+	}
+	if d[i].CaseFold {
+		return strings.ToLower(d[i].Reverse().String()) > strings.ToLower(d[j].Reverse().String())
+	}
+	return d[i].Reverse().String() > d[j].Reverse().String()
 }
 
 type ava []*ldap.AttributeTypeAndValue
