@@ -286,6 +286,7 @@ func (dn *DN) Reverse() *DN {
 	return d
 }
 
+// Depth returns the number of RDNs in the DN
 func (dn *DN) Depth() int {
 	return len(dn.RDNs)
 }
