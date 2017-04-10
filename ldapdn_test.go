@@ -216,3 +216,11 @@ func TestReverse(t *testing.T) {
 		t.Errorf("failed to reverse DN: %s", rev)
 	}
 }
+
+func TestRDNAppend(t *testing.T) {
+	dn, _ := New("cn=group,ou=some,ou=apps,dc=example,dc=org")
+	rdn := dn.FirstRDN()
+	if !rdn.Append(dn.Parent()).Equal(dn) {
+		t.Errorf("append RDN failed...")
+	}
+}

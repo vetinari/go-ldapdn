@@ -286,6 +286,10 @@ func (dn *DN) Reverse() *DN {
 	return d
 }
 
+func (dn *DN) Depth() int {
+	return len(dn.RDNs)
+}
+
 // DNS is used for sorting DNs:
 // (sometimes golint is annoyingly wrong, should be DNs...)
 //   all := []*ldap.DN{dn1, dn2, dn3, dn4}
@@ -340,4 +344,13 @@ func (r *RelativeDN) String() string {
 		parts = append(parts, strings.ToLower(a.Type)+"="+escapeValue(a.Value))
 	}
 	return strings.Join(parts, "+")
+}
+
+// Append returns a the DN with the *RelativeDN prepended.
+func (r *RelativeDN) Append(dn *DN) *DN {
+	cdn := dn.Clone()
+	rdns := []*RelativeDN{r}
+	rdns = append(rdns, cdn.RDNs...)
+	cdn.RDNs = rdns
+	return cdn
 }
